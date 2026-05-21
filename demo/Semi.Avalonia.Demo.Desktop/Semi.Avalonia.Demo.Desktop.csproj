@@ -1,33 +1,56 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <OutputType>WinExe</OutputType>
-        <TargetFramework>net10.0</TargetFramework>
-        <Nullable>enable</Nullable>
-        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-        <ApplicationIcon>..\Semi.Avalonia.Demo\Assets\irihi.ico</ApplicationIcon>
-        <!-- Uncomment below to enable Native AOT compilation-->
-        <!--<PublishAot>true</PublishAot>-->
-    </PropertyGroup>
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Version>1.0.0</Version>
+    <Nullable>enable</Nullable>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationIcon>..\Semi.Avalonia.Demo\Assets\irihi.ico</ApplicationIcon>
+    <!-- Uncomment below to enable Native AOT compilation-->
+    <!--<PublishAot>true</PublishAot>-->
+  </PropertyGroup>
 
-    <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
-        <IsTrimmable>true</IsTrimmable>
-        <PublishTrimmed>true</PublishTrimmed>
-    </PropertyGroup>
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+    <IsTrimmable>true</IsTrimmable>
+    <PublishTrimmed>true</PublishTrimmed>
+  </PropertyGroup>
 
-    <PropertyGroup>
-        <ApplicationManifest>app.manifest</ApplicationManifest>
-    </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
 
-    <ItemGroup>
-        <TrimmerRootDescriptor Include="Roots.xml"/>
-    </ItemGroup>
+  <ItemGroup>
+    <TrimmerRootDescriptor Include="Roots.xml"/>
+  </ItemGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Avalonia.Desktop"/>
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Desktop"/>
+  </ItemGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\Semi.Avalonia.Demo\Semi.Avalonia.Demo.csproj"/>
-        <ProjectReference Include="..\Semi.Avalonia.Demo.Fonts\Semi.Avalonia.Demo.Fonts.csproj"/>
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Semi.Avalonia.Demo\Semi.Avalonia.Demo.csproj"/>
+    <ProjectReference Include="..\Semi.Avalonia.Demo.Fonts\Semi.Avalonia.Demo.Fonts.csproj"/>
+  </ItemGroup>
+
+  <UsingTask TaskName="ExpandMacOSPlistVersion" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <InputFile ParameterType="System.String" Required="true"/>
+      <OutputFile ParameterType="System.String" Required="true"/>
+      <AppVersion ParameterType="System.String" Required="true"/>
+    </ParameterGroup>
+    <Task>
+      <Code Type="Fragment" Language="cs"><![CDATA[
+var token = "$" + "(Version)";
+System.IO.File.WriteAllText(
+    OutputFile,
+    System.IO.File.ReadAllText(InputFile).Replace(token, AppVersion));
+]]></Code>
+    </Task>
+  </UsingTask>
+  <Target Name="ExpandMacOSInfoPlist" AfterTargets="Publish">
+    <ExpandMacOSPlistVersion
+      InputFile="$(MSBuildProjectDirectory)/Info-macOS.plist"
+      OutputFile="$(PublishDir)Info-macOS.plist"
+      AppVersion="$(Version)"/>
+  </Target>
 </Project>
